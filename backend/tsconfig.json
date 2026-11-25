@@ -9,5 +9,5 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["index.ts", "core.ts", "seed.ts", "routes", "services"]
+  "include": ["index.ts", "core.ts", "ensure-db.ts", "seed.ts", "routes", "services"]
 }

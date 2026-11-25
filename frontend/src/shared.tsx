@@ -16,15 +16,23 @@ export async function api(
   body?: any,
   method = body ? "POST" : "GET",
 ) {
-  const form = body instanceof FormData,
-    r = await fetch(API_BASE + "/api" + path, {
-      method,
-      credentials: "include",
-      headers: body && !form ? { "Content-Type": "application/json" } : {},
-      body: body ? (form ? body : JSON.stringify(body)) : undefined,
-    });
-  const v = await r.json();
-  if (!r.ok) throw Error(v.error || "Request failed.");
+  const form = body instanceof FormData;
+  const r = await fetch(API_BASE + "/api" + path, {
+    method,
+    credentials: "include",
+    headers: body && !form ? { "Content-Type": "application/json" } : {},
+    body: body ? (form ? body : JSON.stringify(body)) : undefined,
+  });
+  const text = await r.text();
+  let v: any = {};
+  if (text) {
+    try {
+      v = JSON.parse(text);
+    } catch {
+      throw Error(r.ok ? "Invalid server response." : `Server error (${r.status}). Please ensure backend is running.`);
+    }
+  }
+  if (!r.ok) throw Error(v.error || `Request failed (${r.status})`);
   return v;
 }
 export const money = (v: number) => "₹" + Number(v).toLocaleString("en-IN"),

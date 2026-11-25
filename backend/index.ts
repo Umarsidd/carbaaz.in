@@ -16,6 +16,7 @@ import crypto from "node:crypto";
 import { v2 as cloud } from "cloudinary";
 import { checkout, webhook } from "./routes/pay";
 import { deliver } from "./services/delivery";
+import { ensureLocalDb } from "./ensure-db";
 const app = express();
 const apiOnly =
   process.env.API_ONLY === "1" || process.argv.includes("--api-only");
@@ -26,7 +27,14 @@ const allowedOrigins = new Set(
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean),
-    ...(!prod ? ["http://localhost:5173", "http://127.0.0.1:5173"] : []),
+    ...(!prod
+      ? [
+          "http://localhost:5173",
+          "http://127.0.0.1:5173",
+          "http://localhost:5174",
+          "http://127.0.0.1:5174",
+        ]
+      : []),
   ].filter(Boolean),
 );
 app.use((req, res, next) => {
@@ -234,4 +242,8 @@ app.get("/sitemap.xml", async (_q, r) => {
   );
 });
 app.get("/", (_q, r) => r.json({ service: "carbaaz-api", ok: true }));
-app.listen(Number(process.env.PORT || 3000), "0.0.0.0");
+await ensureLocalDb();
+const port = Number(process.env.PORT || 3000);
+app.listen(port, "0.0.0.0", () => {
+  console.log(`[CARBAAZ] Backend server listening on http://localhost:${port}`);
+});
