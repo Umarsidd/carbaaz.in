@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "CARBAAZ Express API and PostgreSQL operations backend",
   "type": "module",
+  "main": "index.ts",
   "scripts": {
     "dev": "node --import tsx index.ts",
     "build": "tsc --noEmit",
+    "postinstall": "prisma generate --schema prisma/schema.prisma || true",
     "start": "node --import tsx scripts/start.mjs",
     "seed": "node --import tsx seed.ts",
     "migrate": "prisma migrate deploy --schema prisma/schema.prisma",

@@ -242,8 +242,13 @@ app.get("/sitemap.xml", async (_q, r) => {
   );
 });
 app.get("/", (_q, r) => r.json({ service: "carbaaz-api", ok: true }));
-await ensureLocalDb();
-const port = Number(process.env.PORT || 3000);
-app.listen(port, "0.0.0.0", () => {
-  console.log(`[CARBAAZ] Backend server listening on http://localhost:${port}`);
-});
+
+if (!process.env.VERCEL) {
+  await ensureLocalDb();
+  const port = Number(process.env.PORT || 3000);
+  app.listen(port, "0.0.0.0", () => {
+    console.log(`[CARBAAZ] Backend server listening on http://localhost:${port}`);
+  });
+}
+
+export default app;
