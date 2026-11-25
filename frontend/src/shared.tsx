@@ -9,15 +9,17 @@ import {
   Settings2,
 } from "lucide-react";
 export const AppCtx = createContext<any>(null),
-  useApp = () => useContext(AppCtx);
+  useApp = () => useContext(AppCtx),
+  API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 export async function api(
   path: string,
   body?: any,
   method = body ? "POST" : "GET",
 ) {
   const form = body instanceof FormData,
-    r = await fetch("/api" + path, {
+    r = await fetch(API_BASE + "/api" + path, {
       method,
+      credentials: "include",
       headers: body && !form ? { "Content-Type": "application/json" } : {},
       body: body ? (form ? body : JSON.stringify(body)) : undefined,
     });

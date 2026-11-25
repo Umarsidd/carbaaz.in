@@ -1,2 +1,2 @@
 process.env.NODE_ENV = "production";
-await import("../server/index.ts");
+await import("../index.ts");

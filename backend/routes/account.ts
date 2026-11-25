@@ -53,14 +53,15 @@ account.post("/auth/login", async (req, res) => {
   if (!u || !(await bcrypt.compare(b.password, u.hash)))
     return fail(401, "Incorrect email or password.");
   let age = b.remember ? 2592000 : 28800;
+  const crossSite = prod && process.env.CROSS_ORIGIN_COOKIES === "1";
   res
     .cookie(
       "session",
       jwt.sign({ sub: u.id, v: u.version }, secret, { expiresIn: age }),
       {
         httpOnly: true,
-        secure: prod,
-        sameSite: "lax",
+        secure: crossSite || prod,
+        sameSite: crossSite ? "none" : "lax",
         path: "/",
         ...(b.remember ? { maxAge: age * 1000 } : {}),
       },
@@ -74,7 +75,14 @@ account.post("/auth/logout", async (req, res) => {
       where: { id: u.id },
       data: { version: { increment: 1 } },
     });
-  res.clearCookie("session", { path: "/" }).json({ ok: true });
+  const crossSite = prod && process.env.CROSS_ORIGIN_COOKIES === "1";
+  res
+    .clearCookie("session", {
+      path: "/",
+      secure: crossSite || prod,
+      sameSite: crossSite ? "none" : "lax",
+    })
+    .json({ ok: true });
 });
 account.post("/auth/recover", async (req, res) => {
   const u = await db.user.findUnique({

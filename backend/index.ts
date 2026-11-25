@@ -17,6 +17,18 @@ import { v2 as cloud } from "cloudinary";
 import { checkout, webhook } from "./routes/pay";
 import { deliver } from "./services/delivery";
 const app = express();
+const apiOnly =
+  process.env.API_ONLY === "1" || process.argv.includes("--api-only");
+const allowedOrigins = new Set(
+  [
+    origin,
+    ...(process.env.ALLOWED_ORIGINS || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    ...(!prod ? ["http://localhost:5173", "http://127.0.0.1:5173"] : []),
+  ].filter(Boolean),
+);
 app.use((req, res, next) => {
   if (prod && req.hostname === "www.carbaaz.in")
     return res.redirect(308, "https://carbaaz.in" + req.originalUrl);
@@ -49,11 +61,23 @@ app.use(
   express.json({ limit: "120kb" }),
   cookieParser(),
   (req, res, next) => {
+    const reqOrigin = req.headers.origin;
+    if (reqOrigin && allowedOrigins.has(reqOrigin)) {
+      res.set("Access-Control-Allow-Origin", reqOrigin);
+      res.set("Access-Control-Allow-Credentials", "true");
+      res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.set(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PATCH, PUT, DELETE, OPTIONS",
+      );
+      res.set("Vary", "Origin");
+    }
+    if (req.method === "OPTIONS") return res.sendStatus(204);
     res.set("Cache-Control", "no-store");
     if (
       !["GET", "HEAD", "OPTIONS"].includes(req.method) &&
-      req.headers.origin &&
-      req.headers.origin !== origin
+      reqOrigin &&
+      !allowedOrigins.has(reqOrigin)
     )
       return res.status(403).json({ error: "Cross-origin request denied" });
     next();
@@ -108,7 +132,7 @@ app.post(
       });
     } else {
       if (prod) fail(503, "Image storage unavailable");
-      const dir = privatePhoto ? ".local/seller-images" : "server/uploads";
+      const dir = privatePhoto ? ".local/seller-images" : "uploads";
       await fs.mkdir(dir, { recursive: true });
       await fs.writeFile(dir + "/" + name + ".webp", bytes);
       res.json({
@@ -147,7 +171,7 @@ app.get("/api/photos/:name", async (req, res) => {
       dotfiles: "allow",
     });
 });
-app.use("/uploads", express.static("server/uploads"));
+app.use("/uploads", express.static("uploads"));
 app.use("/api", (_req, res) =>
   res.status(404).json({ error: "Unknown endpoint" }),
 );
@@ -209,15 +233,5 @@ app.get("/sitemap.xml", async (_q, r) => {
       "</urlset>",
   );
 });
-if (prod) {
-  app.use(express.static("dist"));
-  app.get("/{*path}", (_q, r) => r.sendFile(path.resolve("dist/index.html")));
-} else {
-  const { createServer } = await import("vite");
-  const vite = await createServer({
-    server: { middlewareMode: true, allowedHosts: true },
-    appType: "spa",
-  });
-  app.use(vite.middlewares);
-}
+app.get("/", (_q, r) => r.json({ service: "carbaaz-api", ok: true }));
 app.listen(Number(process.env.PORT || 3000), "0.0.0.0");

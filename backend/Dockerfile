@@ -4,8 +4,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npx prisma generate --schema server/prisma/schema.prisma && npm run build
+RUN npx prisma generate --schema prisma/schema.prisma && npm run build
 ENV NODE_ENV=production
 USER node
 EXPOSE 3000
-CMD ["sh","-c","npx prisma migrate deploy --schema server/prisma/schema.prisma && npm start"]
+CMD ["sh","-c","npx prisma migrate deploy --schema prisma/schema.prisma && npm start"]

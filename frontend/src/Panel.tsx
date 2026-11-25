@@ -4,6 +4,7 @@ import { ResponsiveContainer, AreaChart, Area, Tooltip, XAxis } from "recharts";
 import {
   useApp,
   api,
+  API_BASE,
   Title,
   Field,
   Submit,
@@ -564,7 +565,7 @@ export function Panel({ admin = false }: any) {
                     <a
                       key={k}
                       className="outline"
-                      href={"/api/admin/reports?days=" + days + "&format=" + k}
+                      href={API_BASE + "/api/admin/reports?days=" + days + "&format=" + k}
                     >
                       Export {k.toUpperCase()}
                     </a>
