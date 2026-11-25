@@ -1,0 +1,78 @@
+{
+  "name": "carbaaz",
+  "version": "1.0.0",
+  "description": "CARBAAZ detailing studio, vehicle marketplace and operations ERP",
+  "scripts": {
+    "test": "npm run smoke",
+    "predev": "npm run generate",
+    "dev": "node --import tsx server/index.ts",
+    "build": "npm run generate && tsc --noEmit && vite build",
+    "prestart": "npm run generate",
+    "start": "node --import tsx scripts/start.mjs",
+    "preseed": "npm run generate",
+    "seed": "node --import tsx server/seed.ts",
+    "migrate": "prisma migrate deploy --schema server/prisma/schema.prisma",
+    "generate": "prisma generate --schema server/prisma/schema.prisma",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Umarsidd/Carbaaz.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Umarsidd/Carbaaz/issues"
+  },
+  "homepage": "https://github.com/Umarsidd/Carbaaz#readme",
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.3.0",
+    "@types/node": "^26.6.6",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pdfkit": "^0.17.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.11.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^18.0.10",
+    "embedded-postgres": "^19.0.0-beta.20",
+    "exceljs": "^4.4.0",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.5",
+    "framer-motion": "^14.14.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^1.79.0",
+    "multer": "^2.5.0",
+    "nodemailer": "^10.6.1",
+    "pdfkit": "^0.21.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-hook-form": "^7.92.0",
+    "react-router-dom": "^7.18.7",
+    "recharts": "^3.11.1",
+    "sharp": "^0.35.5",
+    "stripe": "^23.2.0",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "prettier": "^3.10.1",
+    "prisma": "^6.19.3",
+    "smtp-server": "^3.21.7"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

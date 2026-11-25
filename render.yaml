@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: carbaaz
+    runtime: docker
+    healthCheckPath: /api/health
+    domains:
+      - carbaaz.in
+      - www.carbaaz.in
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: carbaaz
+          property: connectionString
+      - key: APP_ORIGIN
+        value: https://carbaaz.in
+      - key: JWT_SECRET
+        generateValue: true
+databases:
+  - name: carbaaz
+    databaseName: carbaaz

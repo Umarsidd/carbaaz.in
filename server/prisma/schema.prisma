@@ -1,0 +1,333 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  name        String       @unique
+  users       User[]
+  permissions Permission[]
+}
+
+model Permission {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  key       String   @unique
+  roles     Role[]
+}
+
+model User {
+  sms      Boolean @default(false)
+  whatsapp Boolean @default(false)
+
+  id            String         @id @default(cuid())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  email         String         @unique
+  name          String
+  hash          String
+  mobile        String         @default("")
+  verified      Boolean        @default(false)
+  version       Int            @default(0)
+  roleId        String
+  role          Role           @relation(fields: [roleId], references: [id])
+  customer      Customer?
+  staff         Staff?
+  tokens        Token[]
+  notifications Notification[]
+  wishlist      Wishlist[]
+}
+
+model Token {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  digest    String   @unique
+  purpose   String
+  expires   DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  bookings  Booking[]
+  enquiries Enquiry[]
+}
+
+model Staff {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  bookings  Booking[]
+  enquiries Enquiry[]
+}
+
+model Service {
+  introduction String   @default("")
+  process      String[] @default([])
+  faqs         Json     @default("[]")
+  beforeImage  String?
+  afterImage   String?
+  reviews      Review[]
+
+  id          String           @id @default(cuid())
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  slug        String           @unique
+  name        String
+  description String
+  image       String
+  duration    Int
+  benefits    String[]
+  active      Boolean          @default(true)
+  deletedAt   DateTime?
+  packages    ServicePackage[]
+}
+
+model ServicePackage {
+  id        String        @id @default(cuid())
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  name      String
+  price     Int
+  serviceId String
+  service   Service       @relation(fields: [serviceId], references: [id])
+  items     BookingItem[]
+  deletedAt DateTime?
+}
+
+model Vehicle {
+  id           String          @id @default(cuid())
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  slug         String          @unique
+  manufacturer String
+  model        String
+  year         Int
+  price        Int
+  km           Int
+  fuel         String
+  transmission String
+  ownership    String
+  bodyType     String
+  registration String          @default("")
+  features     String[]
+  description  String
+  featured     Boolean         @default(false)
+  sold         Boolean         @default(false)
+  deletedAt    DateTime?
+  images       CarImage[]
+  wishlist     Wishlist[]
+  enquiries    BuyCarEnquiry[]
+
+  @@index([manufacturer, price])
+}
+
+model CarImage {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  url       String
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  id         String        @id @default(cuid())
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  reference  String        @unique
+  customerId String
+  customer   Customer      @relation(fields: [customerId], references: [id])
+  staffId    String?
+  staff      Staff?        @relation(fields: [staffId], references: [id])
+  status     String        @default("Pending")
+  vehicle    Json
+  contact    Json
+  starts     DateTime
+  items      BookingItem[]
+  slots      BookingSlot[]
+  payments   Payment[]
+
+  @@index([customerId, starts])
+}
+
+model BookingItem {
+  id        String         @id @default(cuid())
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  bookingId String
+  booking   Booking        @relation(fields: [bookingId], references: [id])
+  packageId String
+  package   ServicePackage @relation(fields: [packageId], references: [id])
+  price     Int
+  duration  Int
+}
+
+model BookingSlot {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  starts    DateTime @unique
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+}
+
+model Enquiry {
+  id            String          @id @default(cuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  reference     String          @unique
+  kind          String
+  customerId    String?
+  customer      Customer?       @relation(fields: [customerId], references: [id])
+  staffId       String?
+  staff         Staff?          @relation(fields: [staffId], references: [id])
+  name          String
+  email         String
+  mobile        String
+  message       String
+  status        String          @default("Submitted")
+  remarks       String          @default("")
+  internalNotes String          @default("")
+  history       Json
+  buy           BuyCarEnquiry?
+  sell          SellCarRequest?
+
+  @@index([customerId, kind])
+}
+
+model BuyCarEnquiry {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enquiryId String   @unique
+  enquiry   Enquiry  @relation(fields: [enquiryId], references: [id])
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+}
+
+model SellCarRequest {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enquiryId String   @unique
+  enquiry   Enquiry  @relation(fields: [enquiryId], references: [id])
+  details   Json
+  images    String[]
+  offer     Int?
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  @@unique([userId, vehicleId])
+}
+
+model Notification {
+  deliveredAt DateTime?
+  attempts    Int       @default(0)
+  retryAt     DateTime  @default(now())
+
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  read      Boolean  @default(false)
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  bookingId    String?
+  booking      Booking?      @relation(fields: [bookingId], references: [id])
+  reference    String        @unique
+  amount       Int
+  status       String
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  paymentId   String?
+  payment     Payment? @relation(fields: [paymentId], references: [id])
+  kind        String
+  amount      Int
+  description String
+}
+
+model Review {
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id])
+
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   @unique
+  value     String
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   @unique
+  value     String
+}
+
+model Gallery {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   @unique
+  value     String
+}
+
+model WebsiteSetting {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   @unique
+  value     String
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  actor     String
+  action    String
+  recordId  String
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
