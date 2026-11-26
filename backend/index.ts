@@ -18,6 +18,7 @@ import { checkout, webhook } from "./routes/pay";
 import { deliver } from "./services/delivery";
 import { ensureLocalDb } from "./ensure-db";
 const app = express();
+app.set("trust proxy", 1);
 const apiOnly =
   process.env.API_ONLY === "1" || process.argv.includes("--api-only");
 const allowedOrigins = new Set(
@@ -37,11 +38,6 @@ const allowedOrigins = new Set(
       : []),
   ].filter(Boolean),
 );
-app.use((req, res, next) => {
-  if (prod && req.hostname === "www.carbaaz.in")
-    return res.redirect(308, "https://carbaaz.in" + req.originalUrl);
-  next();
-});
 app.use("/webhooks", webhook);
 setInterval(
   () => deliver().catch(() => console.error("Notification delivery deferred")),
@@ -65,7 +61,7 @@ app.use(
 );
 app.use(
   "/api",
-  rateLimit({ windowMs: 60000, limit: 180 }),
+  rateLimit({ windowMs: 60000, limit: 180, validate: { forwardedHeader: false } }),
   express.json({ limit: "120kb" }),
   cookieParser(),
   (req, res, next) => {
