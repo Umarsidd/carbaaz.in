@@ -12,6 +12,18 @@ const dir = ".local/pg",
     persistent: true,
   });
 if (!fs.existsSync(dir + "/PG_VERSION")) await pg.initialise();
+const pidFile = dir + "/postmaster.pid";
+if (fs.existsSync(pidFile)) {
+  const pid = Number(fs.readFileSync(pidFile, "utf8").split(/\r?\n/, 1)[0]);
+  if (!Number.isSafeInteger(pid) || pid <= 0)
+    throw Error("Invalid local PostgreSQL PID file");
+  try {
+    process.kill(pid, 0);
+  } catch (error) {
+    if (error.code !== "ESRCH") throw error;
+    fs.unlinkSync(pidFile);
+  }
+}
 await pg.start();
 const client = pg.getPgClient();
 await client.connect();
