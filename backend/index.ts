@@ -185,6 +185,9 @@ app.use("/api", (_req, res) =>
 );
 app.use((e: any, _req: any, res: any, _next: any) => {
   const prisma = e instanceof Prisma.PrismaClientKnownRequestError;
+  if (!e.status && !(e instanceof ZodError) && !prisma) {
+    console.error("[CARBAAZ] Unhandled API error:", e);
+  }
   res
     .status(
       e instanceof ZodError
